@@ -1,0 +1,32 @@
+{
+  "name": "agent-lisp-paren-aid",
+  "version": "1.0.0",
+  "description": "A tool to help coding agents manage parenthesis matching in generated Lisp code.",
+  "main": "dist/index.js",
+  "bin": {
+    "agent-lisp-paren-aid": "dist/index.js"
+  },
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiyoka/agent-lisp-paren-aid.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kiyoka/agent-lisp-paren-aid/issues"
+  },
+  "homepage": "https://github.com/kiyoka/agent-lisp-paren-aid#readme",
+  "devDependencies": {
+    "@types/node": "^24.0.7",
+    "typescript": "^5.8.3"
+  }
+}
