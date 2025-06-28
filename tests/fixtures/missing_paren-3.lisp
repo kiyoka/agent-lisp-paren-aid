@@ -6,7 +6,7 @@
   (condition-case _err
       (if (= "a" "b")
 	  (princ "true")
-	  (princ "false"))
+	  (princ "false")
     ;; error path
     (error
      (printc "error!"))))

@@ -21,13 +21,25 @@ function isCommentLine(line: string): boolean {
   return line.trimStart().startsWith(';');
 }
 
+/**
+ * Return indentation width where
+ *   space = 1, tab = 8 (as specified in DESIGN_DOC.md).
+ * Tabs and spaces may be mixed; we simply accumulate the total width until the
+ * first non-whitespace character.
+ */
 function countLeadingSpaces(line: string): number {
-  let i = 0;
-  while (i < line.length && line[i] === ' ') i++;
-  if (i < line.length && line[i] === '\t') {
-    throw new Error('Tab characters are not supported');
+  let width = 0;
+  for (let idx = 0; idx < line.length; idx++) {
+    const ch = line[idx];
+    if (ch === ' ') {
+      width += 1;
+    } else if (ch === '\t') {
+      width += 8;
+    } else {
+      break;
+    }
   }
-  return i;
+  return width;
 }
 
 // --------------------------------- Public API ---------------------------
@@ -45,20 +57,36 @@ export function checkParenthesesLogic(data: string): string {
     // Skip full-line comments early.
     if (isCommentLine(rawLine)) continue;
 
-    const indent = countLeadingSpaces(rawLine);
+    let colWidth = 0; // current column width (space=1, tab=8)
 
-    // Heuristic: New top-level form while stack still contains unmatched "(" ⇒
-    // we must have missed some ")" earlier.
-    if (stack.length > 0 && indent === 0 && rawLine.trimStart().startsWith('(')) {
-      const missing = stack.length;
-      const lastOpenLine = stack[stack.length - 1].line;
-      const suspect = lastClosingLine !== -1 ? Math.max(lastClosingLine, lastOpenLine) : i + 1;
-      return `Error: Unmatched open parentheses. Missing ${missing} closing parentheses.\nSuspicious line: ${suspect}`;
+    // Detect start-of-line indentation before scanning chars
+    const lineIndentWidth = countLeadingSpaces(rawLine);
+
+    if (
+      stack.length > 0 &&
+      lineIndentWidth === 0 &&
+      rawLine.trimStart().startsWith('(')
+    ) {
+      const suspect = lastClosingLine !== -1 ? lastClosingLine : i + 1;
+      return `Error: Unmatched open parentheses. Missing ${stack.length} closing parentheses.\nSuspicious line: ${suspect}`;
     }
 
     let j = 0;
     while (j < rawLine.length) {
       const ch = rawLine[j];
+
+      // Update column width *before* any other handling so that it represents
+      // the position of the current character.
+      if (ch === ' ') {
+        colWidth += 1;
+        j++;
+        continue;
+      }
+      if (ch === '\t') {
+        colWidth += 8;
+        j++;
+        continue;
+      }
 
       if (inString) {
         if (ch === '\\') {
@@ -84,8 +112,19 @@ export function checkParenthesesLogic(data: string): string {
       }
 
       if (ch === '(') {
-        stack.push({ line: i + 1, column: j });
+        // Indent mismatch check -------------------------------------------
+        if (stack.length > 0) {
+          const expectedIndent = stack[stack.length - 1].column;
+          if (colWidth < expectedIndent) {
+            const suspect = lastClosingLine !== -1 ? lastClosingLine : i + 1;
+            return `Error: Unmatched closing parentheses. Extra 1 closing parentheses.\nSuspicious line: ${suspect}`;
+          }
+        }
+
+        stack.push({ line: i + 1, column: colWidth });
+        colWidth += 1;
       } else if (ch === ')') {
+        colWidth += 1;
         lastClosingLine = i + 1;
         if (stack.length === 0) {
           // Extra closing paren detected.
@@ -100,8 +139,7 @@ export function checkParenthesesLogic(data: string): string {
   // End-of-file: still unmatched openings.
   if (stack.length > 0) {
     const missing = stack.length;
-    const lastOpenLine = stack[stack.length - 1].line;
-    const suspect = lastClosingLine !== -1 ? Math.max(lastClosingLine, lastOpenLine) : lines.length;
+    const suspect = lines.length;
     return `Error: Unmatched open parentheses. Missing ${missing} closing parentheses.\nSuspicious line: ${suspect}`;
   }
 

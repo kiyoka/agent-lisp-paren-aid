@@ -41,6 +41,12 @@ describe('checkParenthesesLogic', () => {
     expect(checkParenthesesLogic(lispCode)).toBe(expectedError);
   });
 
+  test('should return an error for missing closing parentheses (missing_paren-3.lisp)', () => {
+    const lispCode = loadFixture('missing_paren-3.lisp');
+    const expectedError = 'Error: Unmatched closing parentheses. Extra 1 closing parentheses.\nSuspicious line: 9';
+    expect(checkParenthesesLogic(lispCode)).toBe(expectedError);
+  });
+
   test('should return an error for extra closing parentheses (extra_paren-1.lisp)', () => {
     const lispCode = loadFixture('extra_paren-1.lisp');
     const expectedError = 'Error: Unmatched closing parentheses. Extra 1 closing parentheses.\nSuspicious line: 9';
