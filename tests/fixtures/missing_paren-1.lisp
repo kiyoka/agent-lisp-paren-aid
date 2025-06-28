@@ -1,4 +1,4 @@
-;;; Code:
+;
 (require 'url)
 (require 'url-http)
 
