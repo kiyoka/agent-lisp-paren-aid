@@ -47,6 +47,8 @@ function countLeadingSpaces(line: string): number {
 export function checkParenthesesLogic(data: string): string {
   const lines = data.split('\n');
 
+
+
   const stack: { line: number; column: number }[] = [];
   let inString = false;
   let lastClosingLine = -1;
@@ -62,7 +64,18 @@ export function checkParenthesesLogic(data: string): string {
     // Detect start-of-line indentation before scanning chars
     const lineIndentWidth = countLeadingSpaces(rawLine);
 
-    
+    if (
+      stack.length > 0 &&
+      lineIndentWidth === 0 &&
+      rawLine.trimStart().startsWith('(')
+    ) {
+      const prevLine = stack[stack.length - 1].line;
+      const currentLine = i + 1;
+      return `Error: Indentation mismatch detected at line ${currentLine}.
+This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
+1. The expression block ending before line ${currentLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
+    }
 
     let j = 0;
     while (j < rawLine.length) {
@@ -108,19 +121,14 @@ export function checkParenthesesLogic(data: string): string {
         // Indent mismatch check -------------------------------------------
         if (stack.length > 0) {
           const expectedIndent = stack[stack.length - 1].column;
-          // NOTE: `colWidth` is the position of the opening parenthesis.
           if (colWidth < expectedIndent) { 
             const prevLine = stack[stack.length - 1].line;
             const currentLine = i + 1;
             
-            // A new top-level form is starting at the beginning of the line
-            const isNewTopLevel = (lineIndentWidth === 0 && colWidth === 0);
-            const errorEndLine = isNewTopLevel && lastClosingLine > prevLine ? lastClosingLine : currentLine;
-
             return `Error: Indentation mismatch detected at line ${currentLine}.
 This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
-1. The expression block ending before line ${errorEndLine} has too few closing parentheses.
-2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${errorEndLine}.`;
+1. The expression block ending before line ${currentLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
           }
         }
 
@@ -143,12 +151,11 @@ This suggests a parenthesis issue. Please determine the cause based on the follo
   if (stack.length > 0) {
     const prevLine = stack[stack.length - 1].line;
     const currentLine = lines.length;
-    const errorEndLine = lastClosingLine > prevLine ? lastClosingLine : currentLine;
 
     return `Error: Indentation mismatch detected at line ${currentLine}.
 This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
-1. The expression block ending before line ${errorEndLine} has too few closing parentheses.
-2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${errorEndLine}.`;
+1. The expression block ending before line ${currentLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
   }
 
   return '';
