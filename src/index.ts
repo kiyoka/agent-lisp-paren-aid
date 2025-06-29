@@ -149,15 +149,24 @@ export function checkParenthesesLogic(data: string): string {
 // --------------------------------- CLI wrapper --------------------------
 
 function main(): void {
-  const [filePath] = Deno.args;
+  const [filePath] = process.argv.slice(2);
   if (!filePath) {
     console.error('Please provide a file path as an argument.');
-    Deno.exit(1);
+    process.exit(1);
   }
 
-  const src = fs.readFileSync(filePath, 'utf8');
-  const result = checkParenthesesLogic(src);
-  console.log(result || 'ok');
+  try {
+    const src = fs.readFileSync(filePath, 'utf8');
+    const result = checkParenthesesLogic(src);
+    if (result) {
+      console.log(result);
+    }
+  } catch (e: any) {
+    console.error(`Error reading file: ${e.message}`);
+    process.exit(1);
+  }
 }
 
-main();
+if (typeof require !== 'undefined' && require.main === module) {
+  main();
+}

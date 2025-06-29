@@ -25,3 +25,7 @@ echo ---------------------------
 cat -n ./tests/fixtures/missing_paren-3.lisp
 npx agent-lisp-paren-aid ./tests/fixtures/missing_paren-3.lisp
 echo 
+echo ---------------------------
+cat -n ./tests/fixtures/real_world_sample-1.el
+npx agent-lisp-paren-aid ./tests/fixtures/real_world_sample-1.el
+echo 
