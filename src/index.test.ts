@@ -43,7 +43,10 @@ describe('checkParenthesesLogic', () => {
 
   test('should return an error for missing closing parentheses (missing_paren-3.lisp)', () => {
     const lispCode = loadFixture('missing_paren-3.lisp');
-    const expectedError = 'Error: Unmatched closing parentheses. Extra 1 closing parentheses.\nSuspicious line: 9';
+    const expectedError = `Error: Indentation mismatch detected at line 11.
+This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
+1. The expression block ending before line 11 has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line 7 and line 11.`;
     expect(checkParenthesesLogic(lispCode)).toBe(expectedError);
   });
 
