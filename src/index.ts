@@ -62,14 +62,7 @@ export function checkParenthesesLogic(data: string): string {
     // Detect start-of-line indentation before scanning chars
     const lineIndentWidth = countLeadingSpaces(rawLine);
 
-    if (
-      stack.length > 0 &&
-      lineIndentWidth === 0 &&
-      rawLine.trimStart().startsWith('(')
-    ) {
-      const suspect = lastClosingLine !== -1 ? lastClosingLine : i + 1;
-      return `Error: Unmatched open parentheses. Missing ${stack.length} closing parentheses.\nSuspicious line: ${suspect}`;
-    }
+    
 
     let j = 0;
     while (j < rawLine.length) {
@@ -115,13 +108,19 @@ export function checkParenthesesLogic(data: string): string {
         // Indent mismatch check -------------------------------------------
         if (stack.length > 0) {
           const expectedIndent = stack[stack.length - 1].column;
-          if (colWidth < expectedIndent) {
+          // NOTE: `colWidth` is the position of the opening parenthesis.
+          if (colWidth < expectedIndent) { 
             const prevLine = stack[stack.length - 1].line;
             const currentLine = i + 1;
+            
+            // A new top-level form is starting at the beginning of the line
+            const isNewTopLevel = (lineIndentWidth === 0 && colWidth === 0);
+            const errorEndLine = isNewTopLevel && lastClosingLine > prevLine ? lastClosingLine : currentLine;
+
             return `Error: Indentation mismatch detected at line ${currentLine}.
 This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
-1. The expression block ending before line ${currentLine} has too few closing parentheses.
-2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
+1. The expression block ending before line ${errorEndLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${errorEndLine}.`;
           }
         }
 
@@ -142,9 +141,14 @@ This suggests a parenthesis issue. Please determine the cause based on the follo
 
   // End-of-file: still unmatched openings.
   if (stack.length > 0) {
-    const missing = stack.length;
-    const suspect = lines.length;
-    return `Error: Unmatched open parentheses. Missing ${missing} closing parentheses.\nSuspicious line: ${suspect}`;
+    const prevLine = stack[stack.length - 1].line;
+    const currentLine = lines.length;
+    const errorEndLine = lastClosingLine > prevLine ? lastClosingLine : currentLine;
+
+    return `Error: Indentation mismatch detected at line ${currentLine}.
+This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
+1. The expression block ending before line ${errorEndLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${errorEndLine}.`;
   }
 
   return '';
