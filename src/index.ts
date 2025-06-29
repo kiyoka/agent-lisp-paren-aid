@@ -13,7 +13,7 @@
  *            最後に閉じ括弧が現れた行 (なければ EOF 行) を報告
  */
 
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 
 // --------------------------------- Internals -----------------------------
 
@@ -149,10 +149,10 @@ export function checkParenthesesLogic(data: string): string {
 // --------------------------------- CLI wrapper --------------------------
 
 function main(): void {
-  const [, , filePath] = process.argv;
+  const [filePath] = Deno.args;
   if (!filePath) {
     console.error('Please provide a file path as an argument.');
-    process.exit(1);
+    Deno.exit(1);
   }
 
   const src = fs.readFileSync(filePath, 'utf8');
@@ -160,6 +160,4 @@ function main(): void {
   console.log(result || 'ok');
 }
 
-if (require.main === module) {
-  main();
-}
+main();
