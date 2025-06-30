@@ -11,8 +11,10 @@
  */
 
 import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
-export function checkParenthesesLogic(data: string): string {
+export function checkParenthesesLogic(data: string, filePath?: string): string {
   const lines = data.split('\n');
   let parenCounter = 0;
   let inString = false;
@@ -68,8 +70,18 @@ export function checkParenthesesLogic(data: string): string {
   }
 
   if (parenCounter > 0) {
-    // Missing closing parentheses
-    // This part will be replaced by Emacs integration later.
+    if (filePath) {
+        const tempDir = os.tmpdir();
+        const tempFilePath = path.join(tempDir, path.basename(filePath));
+        try {
+            fs.copyFileSync(filePath, tempFilePath);
+        } catch (e) {
+            if (e instanceof Error) {
+                return `Error: Failed to copy file to /tmp: ${e.message}`;
+            }
+            return `Error: Failed to copy file to /tmp.`;
+        }
+    }
     return `Error: Missing ${parenCounter} closing parentheses.`;
   }
 
@@ -87,7 +99,7 @@ function main(): void {
 
   try {
     const src = fs.readFileSync(filePath, 'utf8');
-    const result = checkParenthesesLogic(src);
+    const result = checkParenthesesLogic(src, filePath);
     console.log(result);
   } catch (e) {
     if (e instanceof Error) {
