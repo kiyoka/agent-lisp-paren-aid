@@ -21,7 +21,7 @@ describe('checkParenthesesLogic', () => {
   test('should return an error for missing closing parentheses (missing_paren-0.lisp)', () => {
     const filePath = path.join(fixturesDir, 'missing_paren-0.lisp');
     const lispCode = fs.readFileSync(filePath, 'utf8');
-    const expectedError = `Error: Missing 2 closing parentheses.`;
+    const expectedError = `Error: line 2: Missing 2 closing parentheses.`;
     expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
   });
 

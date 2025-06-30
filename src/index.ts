@@ -7,7 +7,10 @@
  * - Detects extra closing parentheses and reports the line number.
  * - Detects missing closing parentheses and reports the count.
  *
- * The logic for locating missing parentheses using Emacs is not yet implemented.
+ * For missing closing parentheses, the tool identifies the first line where the
+ * indentation differs from the Emacs-formatted version of the file. If that
+ * cannot be determined, it falls back to the first line where the parser
+ * noticed an excess of opening parentheses.
  */
 
 import * as fs from 'fs';
@@ -19,6 +22,8 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
   const lines = data.split('\n');
   let parenCounter = 0;
   let inString = false;
+  // Stack to keep track of line numbers for each unmatched opening parenthesis
+  const openStack: number[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -52,11 +57,13 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
           break;
         case '(': 
           parenCounter++;
+          openStack.push(lineNum);
           j++;
           break;
         case ')':
           if (parenCounter > 0) {
             parenCounter--;
+            openStack.pop();
           } else {
             // Found an extra closing parenthesis
             return `Error: line ${lineNum}: There are extra 1 closing parentheses.`;
@@ -68,6 +75,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
           break;
       }
     }
+
   }
 
   if (parenCounter > 0) {
@@ -77,6 +85,31 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
         try {
             fs.copyFileSync(filePath, tempFilePath);
             execSync(`emacs --batch "${tempFilePath}" --eval '(indent-region (point-min) (point-max))' -f 'save-buffer'`, { stdio: 'pipe' });
+
+            // Compare the original file and the indented temporary file line by line.
+            const originalLines = data.split('\n');
+            const indentedLines = fs.readFileSync(tempFilePath, 'utf8').split('\n');
+
+            const maxCompare = Math.min(originalLines.length, indentedLines.length);
+            let diffLineNum = 0;
+
+            for (let i = 0; i < maxCompare; i++) {
+                if (originalLines[i] !== indentedLines[i]) {
+                    diffLineNum = i + 1; // 1-based line number
+                    break;
+                }
+            }
+
+            // If no difference was found within the common length but the file
+            // lengths differ, the first extra line is considered the point of
+            // divergence.
+            if (diffLineNum === 0 && originalLines.length !== indentedLines.length) {
+                diffLineNum = maxCompare + 1;
+            }
+
+            if (diffLineNum > 0) {
+                return `Error: line ${diffLineNum}: Missing ${parenCounter} closing parentheses.`;
+            }
         } catch (e) {
             if (e instanceof Error) {
                 return `Error: Failed to process file with Emacs: ${e.message}`;
@@ -84,6 +117,13 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             return `Error: Failed to process file with Emacs.`;
         }
     }
+    // Fallback: if we couldn't determine the diff line via Emacs, use the most
+    // recently opened unmatched parenthesis location (top of the stack).
+    if (openStack.length > 0) {
+        const fallbackLine = openStack[openStack.length - 1];
+        return `Error: line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
+    }
+
     return `Error: Missing ${parenCounter} closing parentheses.`;
   }
 
