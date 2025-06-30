@@ -1,164 +1,149 @@
 #!/usr/bin/env node
 
-/* -------------------------------------------------------------------------
- *   Lisp Parenthesis Checker (core logic)
- * -------------------------------------------------------------------------
- * 本実装は DESIGN_DOC.md に記載されている最小要件のみを満たします。
- * ・コメント(;) と文字列リテラル("…") を無視
- * ・開き/閉じ括弧の対応をカウント
- * ・スタックが残っている状態でインデント 0 の新しいトップレベルフォーム
- *   が現れた場合に「直前の閉じ括弧行」を不足位置として報告
- * – 余分な閉じ括弧は出現した行で即報告
- * – 不足は   スタックサイズ      が欠けた数
- *            最後に閉じ括弧が現れた行 (なければ EOF 行) を報告
+/*
+ * Lisp Parenthesis Checker based on the new specification.
+ *
+ * This implementation focuses on parenthesis counting, ignoring comments and strings.
+ * - Detects extra closing parentheses and reports the line number.
+ * - Detects missing closing parentheses and reports the count.
+ *
+ * For missing closing parentheses, the tool identifies the first line where the
+ * indentation differs from the Emacs-formatted version of the file. If that
+ * cannot be determined, it falls back to the first line where the parser
+ * noticed an excess of opening parentheses.
  */
 
 import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { execSync } from 'child_process';
 
-// --------------------------------- Internals -----------------------------
-
-function isCommentLine(line: string): boolean {
-  return line.trimStart().startsWith(';');
-}
-
-/**
- * Return indentation width where
- *   space = 1, tab = 8 (as specified in DESIGN_DOC.md).
- * Tabs and spaces may be mixed; we simply accumulate the total width until the
- * first non-whitespace character.
- */
-function countLeadingSpaces(line: string): number {
-  let width = 0;
-  for (let idx = 0; idx < line.length; idx++) {
-    const ch = line[idx];
-    if (ch === ' ') {
-      width += 1;
-    } else if (ch === '\t') {
-      width += 8;
-    } else {
-      break;
-    }
-  }
-  return width;
-}
-
-// --------------------------------- Public API ---------------------------
-
-export function checkParenthesesLogic(data: string): string {
+export function checkParenthesesLogic(data: string, filePath?: string): string {
   const lines = data.split('\n');
-
-
-
-  const stack: { line: number; column: number }[] = [];
+  let parenCounter = 0;
   let inString = false;
-  let lastClosingLine = -1;
+  // Stack to keep track of line numbers for each unmatched opening parenthesis
+  const openStack: number[] = [];
 
-  outer: for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineNum = i + 1;
 
-    // Skip full-line comments early.
-    if (isCommentLine(rawLine)) continue;
+    for (let j = 0; j < line.length; ) {
+      const char = line[j];
 
-    let colWidth = 0; // current column width (space=1, tab=8)
-
-    // Detect start-of-line indentation before scanning chars
-    const lineIndentWidth = countLeadingSpaces(rawLine);
-
-    if (
-      stack.length > 0 &&
-      lineIndentWidth === 0 &&
-      rawLine.trimStart().startsWith('(')
-    ) {
-      const prevLine = stack[stack.length - 1].line;
-      const currentLine = i + 1;
-      return `Error: Indentation mismatch detected at line ${currentLine}.
-This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
-1. The expression block ending before line ${currentLine} has too few closing parentheses.
-2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
-    }
-
-    let j = 0;
-    while (j < rawLine.length) {
-      const ch = rawLine[j];
-
-      // Update column width *before* any other handling so that it represents
-      // the position of the current character.
-      if (ch === ' ') {
-        colWidth += 1;
-        j++;
-        continue;
-      }
-      if (ch === '\t') {
-        colWidth += 8;
-        j++;
-        continue;
-      }
-
+      // Handle string literals
       if (inString) {
-        if (ch === '\\') {
-          // Skip escaped character.
-          j += 2;
-          continue;
+        if (char === '\\') {
+          j += 2; // Skip escaped character and the character itself
+        } else if (char === '"') {
+          inString = false;
+          j++;
+        } else {
+          j++;
         }
-        if (ch === '"') inString = false;
-        j++;
         continue;
       }
 
-      // Enter string literal.
-      if (ch === '"') {
-        inString = true;
-        j++;
-        continue;
+      // Handle comments
+      if (char === ';') {
+        break; // Ignore the rest of the line
       }
 
-      // Comment – ignore rest of line.
-      if (ch === ';') {
-        continue outer;
-      }
-
-      if (ch === '(') {
-        // Indent mismatch check -------------------------------------------
-        if (stack.length > 0) {
-          const expectedIndent = stack[stack.length - 1].column;
-          if (colWidth < expectedIndent) { 
-            const prevLine = stack[stack.length - 1].line;
-            const currentLine = i + 1;
-            
-            return `Error: Indentation mismatch detected at line ${currentLine}.
-This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
-1. The expression block ending before line ${currentLine} has too few closing parentheses.
-2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
+      switch (char) {
+        case '"':
+          inString = true;
+          j++;
+          break;
+        case '(': 
+          parenCounter++;
+          openStack.push(lineNum);
+          j++;
+          break;
+        case ')':
+          if (parenCounter > 0) {
+            parenCounter--;
+            openStack.pop();
+          } else {
+            // Found an extra closing parenthesis
+            return `Error: line ${lineNum}: There are extra 1 closing parentheses.`;
           }
-        }
-
-        stack.push({ line: i + 1, column: colWidth });
-        colWidth += 1;
-      } else if (ch === ')') {
-        colWidth += 1;
-        lastClosingLine = i + 1;
-        if (stack.length === 0) {
-          // Extra closing paren detected.
-          return `Error: Unmatched closing parentheses. Extra 1 closing parentheses.\nSuspicious line: ${i + 1}`;
-        }
-        stack.pop();
+          j++;
+          break;
+        default:
+          j++;
+          break;
       }
-      j++;
     }
+
   }
 
-  // End-of-file: still unmatched openings.
-  if (stack.length > 0) {
-    const prevLine = stack[stack.length - 1].line;
-    const currentLine = lines.length;
+  if (parenCounter > 0) {
+    if (filePath) {
+        const tempDir = os.tmpdir();
+        const tempFilePath = path.join(tempDir, path.basename(filePath));
+        try {
+            fs.copyFileSync(filePath, tempFilePath);
+            execSync(`emacs --batch "${tempFilePath}" --eval '(indent-region (point-min) (point-max))' -f 'save-buffer'`, { stdio: 'pipe' });
 
-    return `Error: Indentation mismatch detected at line ${currentLine}.
-This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
-1. The expression block ending before line ${currentLine} has too few closing parentheses.
-2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
+            // Compare the original file and the indented temporary file line by line.
+            const originalLines = data.split('\n');
+            const indentedLines = fs.readFileSync(tempFilePath, 'utf8').split('\n');
+
+            const maxCompare = Math.min(originalLines.length, indentedLines.length);
+            let diffLineNum = 0;
+
+            let seenCode = false;
+            for (let i = 0; i < maxCompare; i++) {
+                const origTrim = originalLines[i].trimStart();
+                const indentTrim = indentedLines[i].trimStart();
+
+                // Skip comment lines at the very beginning of the file. Once we
+                // have seen a non-comment line, comment lines are treated like
+                // ordinary lines.
+                if (!seenCode && origTrim.startsWith(';') && indentTrim.startsWith(';')) {
+                    continue;
+                }
+
+                if (!origTrim.startsWith(';')) {
+                    seenCode = true;
+                }
+
+                // For non-comment lines, detect any difference (including indentation).
+                if (originalLines[i] !== indentedLines[i]) {
+                    diffLineNum = i + 1; // 1-based line number
+                    break;
+                }
+            }
+
+            // If no difference was found within the common length but the file
+            // lengths differ, the first extra line is considered the point of
+            // divergence.
+            if (diffLineNum === 0 && originalLines.length !== indentedLines.length) {
+                diffLineNum = maxCompare + 1;
+            }
+
+            if (diffLineNum > 0) {
+                return `Error: near line ${diffLineNum}: Missing ${parenCounter} closing parentheses.`;
+            }
+        } catch (e) {
+            if (e instanceof Error) {
+                return `Error: Failed to process file with Emacs: ${e.message}`;
+            }
+            return `Error: Failed to process file with Emacs.`;
+        }
+    }
+    // Fallback: if we couldn't determine the diff line via Emacs, use the most
+    // recently opened unmatched parenthesis location (top of the stack).
+    if (openStack.length > 0) {
+        const fallbackLine = openStack[openStack.length - 1];
+        return `Error: near line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
+    }
+
+    return `Error: Missing ${parenCounter} closing parentheses.`;
   }
 
-  return '';
+  return 'ok';
 }
 
 // --------------------------------- CLI wrapper --------------------------
@@ -170,9 +155,18 @@ function main(): void {
     process.exit(1);
   }
 
-  const src = fs.readFileSync(filePath, 'utf8');
-  const result = checkParenthesesLogic(src);
-  console.log(result || 'ok');
+  try {
+    const src = fs.readFileSync(filePath, 'utf8');
+    const result = checkParenthesesLogic(src, filePath);
+    console.log(result);
+  } catch (e) {
+    if (e instanceof Error) {
+        console.error(`Error reading file: ${e.message}`);
+    } else {
+        console.error(`An unknown error occurred.`);
+    }
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {
