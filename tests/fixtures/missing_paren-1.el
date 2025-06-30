@@ -10,4 +10,3 @@
 
 (defun nextfunc ()
   (princ ""))
-
