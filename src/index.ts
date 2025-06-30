@@ -93,7 +93,23 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             const maxCompare = Math.min(originalLines.length, indentedLines.length);
             let diffLineNum = 0;
 
+            let seenCode = false;
             for (let i = 0; i < maxCompare; i++) {
+                const origTrim = originalLines[i].trimStart();
+                const indentTrim = indentedLines[i].trimStart();
+
+                // Skip comment lines at the very beginning of the file. Once we
+                // have seen a non-comment line, comment lines are treated like
+                // ordinary lines.
+                if (!seenCode && origTrim.startsWith(';') && indentTrim.startsWith(';')) {
+                    continue;
+                }
+
+                if (!origTrim.startsWith(';')) {
+                    seenCode = true;
+                }
+
+                // For non-comment lines, detect any difference (including indentation).
                 if (originalLines[i] !== indentedLines[i]) {
                     diffLineNum = i + 1; // 1-based line number
                     break;
