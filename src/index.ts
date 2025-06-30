@@ -124,7 +124,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             }
 
             if (diffLineNum > 0) {
-                return `Error: line ${diffLineNum}: Missing ${parenCounter} closing parentheses.`;
+                return `Error: near line ${diffLineNum}: Missing ${parenCounter} closing parentheses.`;
             }
         } catch (e) {
             if (e instanceof Error) {
@@ -137,7 +137,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
     // recently opened unmatched parenthesis location (top of the stack).
     if (openStack.length > 0) {
         const fallbackLine = openStack[openStack.length - 1];
-        return `Error: line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
+        return `Error: near line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
     }
 
     return `Error: Missing ${parenCounter} closing parentheses.`;
