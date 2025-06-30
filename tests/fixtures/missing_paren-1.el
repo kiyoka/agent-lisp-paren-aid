@@ -6,7 +6,7 @@
   "text message \"aaa\""
   (if (= "a" "b")
       (princ "true")
-      (princ "false"))
+    (princ "false"))
 
 (defun nextfunc ()
   (princ ""))

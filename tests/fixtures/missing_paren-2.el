@@ -7,7 +7,7 @@
   ;; comment 1
   (if (= "a" "b")
       (princ "true")
-      (princ "false"))
+    (princ "false"))
 
 (defun nextfunc ()
   (princ ""))
