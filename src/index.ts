@@ -13,6 +13,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { execSync } from 'child_process';
 
 export function checkParenthesesLogic(data: string, filePath?: string): string {
   const lines = data.split('\n');
@@ -75,11 +76,12 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
         const tempFilePath = path.join(tempDir, path.basename(filePath));
         try {
             fs.copyFileSync(filePath, tempFilePath);
+            execSync(`emacs --batch "${tempFilePath}" --eval '(indent-region (point-min) (point-max))' -f 'save-buffer'`, { stdio: 'pipe' });
         } catch (e) {
             if (e instanceof Error) {
-                return `Error: Failed to copy file to /tmp: ${e.message}`;
+                return `Error: Failed to process file with Emacs: ${e.message}`;
             }
-            return `Error: Failed to copy file to /tmp.`;
+            return `Error: Failed to process file with Emacs.`;
         }
     }
     return `Error: Missing ${parenCounter} closing parentheses.`;
