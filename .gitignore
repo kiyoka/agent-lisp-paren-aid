@@ -2,3 +2,5 @@ node_modules
 dist
 bin/agent-lisp-paren-aid-deno
 memo.txt
+.\#memo.txt
+\#memo.txt\#
