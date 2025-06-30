@@ -11,7 +11,8 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "tsc"
+    "build": "tsc",
+    "deno-build": "deno compile --allow-read --allow-write --output bin/agent-lisp-paren-aid-deno src/index.ts"
   },
   "repository": {
     "type": "git",

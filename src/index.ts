@@ -47,6 +47,8 @@ function countLeadingSpaces(line: string): number {
 export function checkParenthesesLogic(data: string): string {
   const lines = data.split('\n');
 
+
+
   const stack: { line: number; column: number }[] = [];
   let inString = false;
   let lastClosingLine = -1;
@@ -67,8 +69,12 @@ export function checkParenthesesLogic(data: string): string {
       lineIndentWidth === 0 &&
       rawLine.trimStart().startsWith('(')
     ) {
-      const suspect = lastClosingLine !== -1 ? lastClosingLine : i + 1;
-      return `Error: Unmatched open parentheses. Missing ${stack.length} closing parentheses.\nSuspicious line: ${suspect}`;
+      const prevLine = stack[stack.length - 1].line;
+      const currentLine = i + 1;
+      return `Error: Indentation mismatch detected at line ${currentLine}.
+This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
+1. The expression block ending before line ${currentLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
     }
 
     let j = 0;
@@ -115,9 +121,14 @@ export function checkParenthesesLogic(data: string): string {
         // Indent mismatch check -------------------------------------------
         if (stack.length > 0) {
           const expectedIndent = stack[stack.length - 1].column;
-          if (colWidth < expectedIndent) {
-            const suspect = lastClosingLine !== -1 ? lastClosingLine : i + 1;
-            return `Error: Unmatched closing parentheses. Extra 1 closing parentheses.\nSuspicious line: ${suspect}`;
+          if (colWidth < expectedIndent) { 
+            const prevLine = stack[stack.length - 1].line;
+            const currentLine = i + 1;
+            
+            return `Error: Indentation mismatch detected at line ${currentLine}.
+This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
+1. The expression block ending before line ${currentLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
           }
         }
 
@@ -138,9 +149,13 @@ export function checkParenthesesLogic(data: string): string {
 
   // End-of-file: still unmatched openings.
   if (stack.length > 0) {
-    const missing = stack.length;
-    const suspect = lines.length;
-    return `Error: Unmatched open parentheses. Missing ${missing} closing parentheses.\nSuspicious line: ${suspect}`;
+    const prevLine = stack[stack.length - 1].line;
+    const currentLine = lines.length;
+
+    return `Error: Indentation mismatch detected at line ${currentLine}.
+This suggests a parenthesis issue. Please determine the cause based on the following possibilities:
+1. The expression block ending before line ${currentLine} has too few closing parentheses.
+2. A closing parenthesis is missing somewhere between line ${prevLine} and line ${currentLine}.`;
   }
 
   return '';
