@@ -154,7 +154,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
                 // lines (e.g. small one-liner expressions).
                 const lastUnmatchedOpen = openStack.length > 0 ? openStack[openStack.length - 1] : 0;
                 const finalLine = targetLine < lastUnmatchedOpen ? lastUnmatchedOpen : targetLine;
-                return `Error: near line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+                return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
             }
             // If we couldn't find any closing paren candidate, we'll fall back later.
     }
@@ -170,7 +170,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             if (l < diffLineNum) {
                 const lastUnmatchedOpen = openStack[openStack.length - 1];
                 const finalLine = l < lastUnmatchedOpen ? lastUnmatchedOpen : l;
-                return `Error: near line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+                return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
             }
         }
     }
@@ -178,7 +178,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
     // Final fallback: report using the latest unmatched opening parenthesis.
     if (openStack.length > 0) {
         const fallbackLine = openStack[openStack.length - 1];
-        return `Error: near line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
+        return `Error: line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
     }
 
     return `Error: Missing ${parenCounter} closing parentheses.`;
