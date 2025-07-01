@@ -13,10 +13,12 @@
  * noticed an excess of opening parentheses.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
-import { execSync } from 'child_process';
+// Use Node.js built-in modules with `node:` prefix for Deno compatibility
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+// Use Node.js compatibility import for Deno (node: prefix)
+import { execSync } from 'node:child_process';
 
 export function checkParenthesesLogic(data: string, filePath?: string): string {
   const lines = data.split('\n');

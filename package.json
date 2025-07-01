@@ -12,7 +12,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "deno-build": "deno compile --allow-read --allow-write --output bin/agent-lisp-paren-aid-deno src/index.ts"
+    "deno-build": "deno compile --allow-read --allow-write --config tsconfig.deno.json --output bin/agent-lisp-paren-aid-linux src/index.ts"
   },
   "repository": {
     "type": "git",
