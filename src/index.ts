@@ -13,10 +13,73 @@
  * noticed an excess of opening parentheses.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
-import { execSync } from 'child_process';
+// Use Node.js built-in modules with `node:` prefix for Deno compatibility
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+// Use Node.js compatibility import for Deno (node: prefix)
+import { execSync } from 'node:child_process';
+
+// ---------------------- Version helper ----------------------------------
+
+function getPackageInfo(): { name: string; version: string } {
+  let name = 'agent-lisp-paren-aid';
+  let version = 'unknown';
+
+  // Attempt CommonJS require (Node.js)
+  try {
+    if (typeof require !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const pkg = require('../package.json');
+      name = pkg.name ?? name;
+      version = pkg.version ?? version;
+      return { name, version };
+    }
+  } catch {
+    // ignore
+  }
+
+  // Attempt to read the JSON file directly (may work when running from source tree)
+  try {
+    const pkgPath = path.resolve(__dirname, '..', 'package.json');
+    const raw = fs.readFileSync(pkgPath, 'utf8');
+    const pkg = JSON.parse(raw);
+    name = pkg.name ?? name;
+    version = pkg.version ?? version;
+  } catch {
+    // ignore – fall back to defaults
+  }
+
+  // Attempt when running in a Deno compiled binary: use Deno.mainModule
+  try {
+    const denoGlobal: any = (globalThis as any).Deno;
+    if (denoGlobal && typeof denoGlobal.mainModule === 'string') {
+      const pkgUrl = new URL('../package.json', denoGlobal.mainModule);
+      const raw = fs.readFileSync(pkgUrl, 'utf8');
+      const pkg = JSON.parse(raw as unknown as string);
+      name = pkg.name ?? name;
+      version = pkg.version ?? version;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  // Attempt via import.meta.url (Deno / ESM)
+  try {
+    const metaUrl = Function('return typeof import!=="undefined" ? import.meta.url : undefined')();
+    if (metaUrl) {
+      const pkgUrl = new URL('../package.json', metaUrl);
+      const raw = fs.readFileSync(pkgUrl, 'utf8');
+      const pkg = JSON.parse(raw as unknown as string);
+      name = pkg.name ?? name;
+      version = pkg.version ?? version;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return { name, version };
+}
 
 export function checkParenthesesLogic(data: string, filePath?: string): string {
   const lines = data.split('\n');
@@ -190,9 +253,18 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
 // --------------------------------- CLI wrapper --------------------------
 
 function main(): void {
-  const [, , filePath] = process.argv;
+  const args = process.argv.slice(2);
+
+  // --version flag
+  if (args.length === 1 && (args[0] === '--version' || args[0] === '-v')) {
+    const { name, version } = getPackageInfo();
+    console.log(`${name} ${version}`);
+    return;
+  }
+
+  const filePath = args[0];
   if (!filePath) {
-    console.error('Please provide a file path as an argument.');
+    console.error('Usage: agent-lisp-paren-aid [--version] <file.lisp>');
     process.exit(1);
   }
 
@@ -202,14 +274,22 @@ function main(): void {
     console.log(result);
   } catch (e) {
     if (e instanceof Error) {
-        console.error(`Error reading file: ${e.message}`);
+      console.error(`Error reading file: ${e.message}`);
     } else {
-        console.error(`An unknown error occurred.`);
+      console.error(`An unknown error occurred.`);
     }
     process.exit(1);
   }
 }
 
-if (require.main === module) {
+// Node.js entry point check (CommonJS) and Deno entry point.
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-ignore - Guard for environments without `require` (e.g., Deno).
+const isNodeEntry = typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module;
+// Deno sets `import.meta.main` to true for the entry script.
+// Use a try/catch to avoid syntax errors when transpiled to CommonJS.
+const isDenoEntry = typeof (globalThis as any).Deno !== 'undefined' && typeof (globalThis as any).Deno.mainModule === 'string';
+
+if (isNodeEntry || isDenoEntry) {
   main();
 }
