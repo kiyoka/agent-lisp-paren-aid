@@ -1,95 +1,64 @@
 # agent-lisp-paren-aid
 
-## Overview
+## Project Overview
 
-`agent-lisp-paren-aid` is a command-line tool that automatically checks
-parenthesis balancing in Lisp source code generated (or edited) by **coding
-agents backed by large language models (LLMs)**.
+`agent-lisp-paren-aid` is a command-line utility that automatically checks
+parenthesis matching in Lisp source code produced by **coding agents powered by
+large language models (LLMs)**.  While the parser is tuned for Emacs Lisp, it
+also works with other Lisp dialects that rely on simple S-expressions.
 
-Although the implementation is tuned for Emacs Lisp, it will also work with
-any Lisp dialect that uses simple S-expressions.
-
-Why do we need it? Even the newest LLMs sometimes produce Lisp code with
-missing or extra closing parentheses.  When that happens the agent often fails
-to repair the code by itself.  By inserting this tool into the workflow you
-can instantly detect such mistakes and point the agent (or a human developer)
-to the exact line that needs to be fixed.
+Even modern LLMs occasionally emit Lisp code with *missing* or *extra*
+parentheses. Integrating this tool into your workflow lets you verify generated
+code instantly and pin-point the exact line that needs to be fixed.
 
 ## Features
 
-* Ignores comments (`; …`) and string literals (`"…"`) while parsing.
-* Records the line number of every closing parenthesis in an internal database
-  (DB1).
-* **Extra parenthesis** – reported immediately with the offending line number.
-* **Missing parenthesis** – detected through a multi-step heuristic:
-  1. Copy the target file to `/tmp/` and run Emacs `indent-region` on it.
-  2. Find the first line where the indentation (or any text) differs – this is
-     line L1.
-  3. Starting from *one line before* L1, search upward in DB1 until the first
-     `)` is found; that line is reported as the place where a closing paren is
-     missing.
-  4. If Emacs is unavailable, fall back to the most recent unmatched opening
-     parenthesis.
-* Works both as a Node.js script and as a self-contained binary produced by
-  `deno compile`.
-* `--version` flag prints the program name and version.
+* **Extra parenthesis** — immediately reports the offending line number.
+* **Missing parenthesis** — heuristically locates the line where a `)` should
+  be inserted and reports it.
 
 ## Installation
 
-### 1) Run with Node.js
-
-```bash
-git clone https://github.com/kiyoka/agent-lisp-paren-aid.git
-cd agent-lisp-paren-aid
-npm install          # install dependencies
-npm run build        # transpile TypeScript to JS
-
-# Example
-node dist/index.js sample.el
-```
-
-### 2) Self-contained binary with Deno
-
-`deno compile` can bundle the program and its dependencies into a single
-executable.  See `HOW_TO_BUILD.md` for detailed instructions.
-
-```bash
-npm run deno-build   # produces bin/agent-lisp-paren-aid-linux (for your OS)
-```
+Download the Deno-compiled single binary for your platform from the GitHub
+Releases page and place it somewhere in your `$PATH`.
 
 ## Usage
 
 ```bash
-# Basic usage
-agent-lisp-paren-aid <file.lisp>
+# Basic
+agent-lisp-paren-aid-linux <file.el>
 
 # Print version
-agent-lisp-paren-aid --version
+agent-lisp-paren-aid-linux --version
 ```
 
 ### Output examples
 
-| Situation            | Output example                                                      |
-|----------------------|---------------------------------------------------------------------|
-| No problems          | `ok`                                                               |
-| Extra parenthesis    | `Error: line 42: There are extra 1 closing parentheses.`            |
-| Missing parenthesis  | `Error: line 10: Missing 2 closing parentheses.`                    |
+| Situation           | Example output                                                     |
+|---------------------|--------------------------------------------------------------------|
+| Balanced            | `ok`                                                               |
+| Extra parenthesis   | `Error: line 42: There are extra 1 closing parentheses.`           |
+| Missing parenthesis | `Error: line 10: Missing 2 closing parentheses.`                   |
 
-*Only the first mismatch from the top of the file is reported even if multiple
-errors exist.*
+*If multiple mismatches exist, only the first one (from the top of the file) is
+reported.*
 
 ## Requirements
 
-* **Node.js ≥ 18** *or* **Deno ≥ 1.44**
-* **Emacs** – required only when detecting *missing* parentheses (indentation
-  trick).
+* **Node.js ≥ 18** or **Deno ≥ 1.44** (not required when you run the single
+  binary)
+* **Emacs** — used only when the tool needs to detect *missing* parentheses via
+  indentation analysis
 
 ## Development
 
 ```bash
-npm test   # run unit tests (Jest + ts-jest)
+npm test   # Run unit tests (Jest + ts-jest)
 ```
+
+How to build the Deno single binary: see
+[HOW_TO_BUILD.md](HOW_TO_BUILD.md).
 
 ## License
 
-ISC License
+MIT License
