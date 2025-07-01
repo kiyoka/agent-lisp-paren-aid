@@ -32,6 +32,8 @@ $ deno compile \
     --config tsconfig.deno.json \
     --allow-read \   # ファイルを読み取るための権限
     --allow-write \  # /tmp/ やコピー先にファイルを出力するための権限
+    --allow-env \    # TMPDIR など環境変数へのアクセス権限
+    --allow-run \    # 外部コマンド(Emacs) を実行する権限
     --output bin/agent-lisp-paren-aid \  # 生成物の出力先
     src/index.ts
 ```
@@ -50,7 +52,7 @@ $ ./bin/agent-lisp-paren-aid path/to/file.el
 # 例: Windows (x86_64)
 deno compile \
   --config tsconfig.deno.json \
-  --allow-read --allow-write \
+  --allow-read --allow-write --allow-env --allow-run \
   --target x86_64-pc-windows-msvc \
   --output bin/agent-lisp-paren-aid-win.exe \
   src/index.ts
@@ -58,7 +60,7 @@ deno compile \
 # 例: macOS (Apple Silicon)
 deno compile \
   --config tsconfig.deno.json \
-  --allow-read --allow-write \
+  --allow-read --allow-write --allow-env --allow-run \
   --target aarch64-apple-darwin \
   --output bin/agent-lisp-paren-aid-macos-arm64 \
   src/index.ts

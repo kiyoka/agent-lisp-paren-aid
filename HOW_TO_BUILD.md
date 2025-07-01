@@ -28,6 +28,8 @@ deno compile \
   --config tsconfig.deno.json \     # ignore Node-specific tsconfig options
   --allow-read \                    # the tool reads source files
   --allow-write \                   # writes to /tmp when using Emacs
+  --allow-env \                     # reads TMPDIR environment variable
+  --allow-run \                     # executes external commands (Emacs)
   --output bin/agent-lisp-paren-aid \  # output file name
   src/index.ts
 ```
@@ -44,7 +46,7 @@ Run it:
 # Windows (x86_64)
 deno compile \
   --config tsconfig.deno.json \
-  --allow-read --allow-write \
+  --allow-read --allow-write --allow-env --allow-run \
   --target x86_64-pc-windows-msvc \
   --output bin/agent-lisp-paren-aid-win.exe \
   src/index.ts
@@ -52,7 +54,7 @@ deno compile \
 # macOS (Apple Silicon)
 deno compile \
   --config tsconfig.deno.json \
-  --allow-read --allow-write \
+  --allow-read --allow-write --allow-env --allow-run \
   --target aarch64-apple-darwin \
   --output bin/agent-lisp-paren-aid-macos-arm64 \
   src/index.ts
