@@ -8,47 +8,21 @@
 
 ## 特長
 
-* コメント (`;...`) と文字列リテラル（`"..."`）を無視して解析。
-* すべての閉じ括弧の行番号を内部 DB1 に記録。
-* 括弧が **多すぎる** 場合 … その行番号を即座にエラー報告。
-* 括弧が **足りない** 場合 …
-  1. 対象ファイルを `/tmp/` にコピーして Emacs の `indent-region` で整形。
-  2. 整形前後の差分で最初にズレた行 (L1) を取得。
-  3. L1 の 1 行前から上向きに DB1 を検索し、最初に見つかった `)` の行を "閉じ括弧を付け忘れた行" として報告。
-  4. Emacs が使えない環境では、最後に残った未マッチの `(` の行をフォールバック。
-* Node.js 実行でも Deno の単一バイナリでも動作。
-* `--version` フラグでバージョン確認可能。
+* 括弧が **多すぎる** 場合 … その行番号をエラー報告。
+* 括弧が **足りない** 場合 … 閉じ括弧を付け忘れた行を推測して報告。
 
 ## インストール方法
 
-### 1) Node.js で直接実行
-
-```bash
-$ git clone https://github.com/kiyoka/agent-lisp-paren-aid.git
-$ cd agent-lisp-paren-aid
-$ npm install    # 依存パッケージ取得
-$ npm run build  # TypeScript から JS へビルド
-
-# 例
-$ node dist/index.js sample.el
-```
-
-### 2) Deno シングルバイナリ
-
-`deno compile` を用いて自己完結型バイナリを生成できます。詳しくは `WHO_TO_BUILD.md` を参照してください。
-
-```bash
-$ npm run deno-build   # bin/agent-lisp-paren-aid-linux が生成される
-```
+denoで生成したシングルバイナリをGitHubのリリースリンクからダウンロードしてパスの通ったところに置いてください。
 
 ## 使い方
 
 ```bash
 # 基本
-$ agent-lisp-paren-aid <file.lisp>
+$ agent-lisp-paren-aid-linux <file.el>
 
 # バージョン表示
-$ agent-lisp-paren-aid --version
+$ agent-lisp-paren-aid-linux --version
 ```
 
 ### 出力例
@@ -63,7 +37,7 @@ $ agent-lisp-paren-aid --version
 
 ## 前提ソフトウェア
 
-* **Node.js v18+** もしくは **Deno v1.44+**
+* **Node.js v18+** もしくは **Deno v1.44+**  (シングルバイナリ実行するだけであれば、不要)
 * **Emacs**（括弧不足時のインデント解析に使用）
 
 ## 開発
@@ -72,6 +46,8 @@ $ agent-lisp-paren-aid --version
 $ npm test   # Jest + ts-jest でユニットテスト実行
 ```
 
+ビルド方法は [HOW_TO_BUILD.md](HOW_TO_BUILD.md) を参照
+
 ## ライセンス
 
-ISC License
+MIT License
