@@ -1,4 +1,5 @@
-# agent-lisp-paren-aid
+# agent-lisp-paren-aid  
+*English version is available in [README.md](README.md).* 
 
 ## プロジェクト概要
 

@@ -1,4 +1,5 @@
-# HOW TO BUILD (Deno 版シングルバイナリ)
+# HOW_TO_BUILD (Deno 版シングルバイナリ)  
+*English version is available in [HOW_TO_BUILD.md](HOW_TO_BUILD.md).* 
 
 本ツールは TypeScript 製ですが、Deno の `deno compile` コマンドを使うことで **単一実行ファイル** に変換して配布できます。以下に手順を示します。
 

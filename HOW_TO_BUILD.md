@@ -1,4 +1,5 @@
-# HOW TO BUILD (Deno single-binary version)
+# HOW TO BUILD (Deno single-binary version)  
+*日本語版は [HOW_TO_BUILD.ja.md](HOW_TO_BUILD.ja.md) をご覧ください。*
 
 This project is written in TypeScript, but you can turn it into a **single stand-alone executable** by using Deno’s `deno compile` command. That makes distribution simple—no runtime dependencies are required except the binary itself.
 

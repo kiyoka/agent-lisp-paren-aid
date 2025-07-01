@@ -1,4 +1,5 @@
-# agent-lisp-paren-aid
+# agent-lisp-paren-aid  
+*日本語版は [README.ja.md](README.ja.md) をご覧ください。*
 
 ## Project Overview
 
