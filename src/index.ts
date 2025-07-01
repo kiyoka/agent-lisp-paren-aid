@@ -24,6 +24,8 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
   let inString = false;
   // Stack to keep track of line numbers for each unmatched opening parenthesis
   const openStack: number[] = [];
+  // DB1: Record of every ')' token encountered along with its line number
+  const closeParenLines: number[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -61,6 +63,9 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
           j++;
           break;
         case ')':
+          // Record this closing parenthesis occurrence (DB1)
+          closeParenLines.push(lineNum);
+
           if (parenCounter > 0) {
             parenCounter--;
             openStack.pop();
@@ -79,6 +84,8 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
   }
 
   if (parenCounter > 0) {
+    let diffLineNum = 0; // (L1)
+
     if (filePath) {
         const tempDir = os.tmpdir();
         const tempFilePath = path.join(tempDir, path.basename(filePath));
@@ -91,16 +98,13 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             const indentedLines = fs.readFileSync(tempFilePath, 'utf8').split('\n');
 
             const maxCompare = Math.min(originalLines.length, indentedLines.length);
-            let diffLineNum = 0;
 
             let seenCode = false;
             for (let i = 0; i < maxCompare; i++) {
                 const origTrim = originalLines[i].trimStart();
                 const indentTrim = indentedLines[i].trimStart();
 
-                // Skip comment lines at the very beginning of the file. Once we
-                // have seen a non-comment line, comment lines are treated like
-                // ordinary lines.
+                // Skip initial comment block until first non-comment code line is seen.
                 if (!seenCode && origTrim.startsWith(';') && indentTrim.startsWith(';')) {
                     continue;
                 }
@@ -109,23 +113,18 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
                     seenCode = true;
                 }
 
-                // For non-comment lines, detect any difference (including indentation).
+                // Detect any difference (including indentation).
                 if (originalLines[i] !== indentedLines[i]) {
-                    diffLineNum = i + 1; // 1-based line number
+                    diffLineNum = i + 1; // 1-based line number (L1)
                     break;
                 }
             }
 
-            // If no difference was found within the common length but the file
-            // lengths differ, the first extra line is considered the point of
-            // divergence.
+            // If no difference found but file lengths differ, point to first extra line.
             if (diffLineNum === 0 && originalLines.length !== indentedLines.length) {
                 diffLineNum = maxCompare + 1;
             }
 
-            if (diffLineNum > 0) {
-                return `Error: near line ${diffLineNum}: Missing ${parenCounter} closing parentheses.`;
-            }
         } catch (e) {
             if (e instanceof Error) {
                 return `Error: Failed to process file with Emacs: ${e.message}`;
@@ -133,11 +132,53 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             return `Error: Failed to process file with Emacs.`;
         }
     }
-    // Fallback: if we couldn't determine the diff line via Emacs, use the most
-    // recently opened unmatched parenthesis location (top of the stack).
+
+    if (diffLineNum > 0) {
+        // Use DB1 (closeParenLines) to search upward from L1.
+        let targetLine = 0;
+            // According to spec (A): start searching from the line **before** L1.
+            for (let i = closeParenLines.length - 1; i >= 0; i--) {
+                const l = closeParenLines[i];
+                if (l < diffLineNum) {
+                    targetLine = l;
+                    break;
+                }
+            }
+
+
+            if (targetLine > 0) {
+                // If this candidate is before the most recent unmatched opening '(',
+                // prefer the line of that unmatched opening instead. This heuristic
+                // better pin-points the location where the missing ')' should be
+                // inserted when multiple parentheses are missing on consecutive
+                // lines (e.g. small one-liner expressions).
+                const lastUnmatchedOpen = openStack.length > 0 ? openStack[openStack.length - 1] : 0;
+                const finalLine = targetLine < lastUnmatchedOpen ? lastUnmatchedOpen : targetLine;
+                return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+            }
+            // If we couldn't find any closing paren candidate, we'll fall back later.
+    }
+
+    // If diffLineNum could not be determined (e.g., Emacs unavailable), approximate it
+    // with the most recent unmatched opening parenthesis line so that we can still
+    // leverage DB1 for locating the error.
+    if (diffLineNum === 0 && openStack.length > 0) {
+        diffLineNum = openStack[openStack.length - 1];
+        // Try DB1 search again with this approximated L1.
+        for (let i = closeParenLines.length - 1; i >= 0; i--) {
+            const l = closeParenLines[i];
+            if (l < diffLineNum) {
+                const lastUnmatchedOpen = openStack[openStack.length - 1];
+                const finalLine = l < lastUnmatchedOpen ? lastUnmatchedOpen : l;
+                return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+            }
+        }
+    }
+
+    // Final fallback: report using the latest unmatched opening parenthesis.
     if (openStack.length > 0) {
         const fallbackLine = openStack[openStack.length - 1];
-        return `Error: near line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
+        return `Error: line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
     }
 
     return `Error: Missing ${parenCounter} closing parentheses.`;
