@@ -28,14 +28,14 @@ describe('checkParenthesesLogic', () => {
   test('should return an error for missing closing parentheses (missing_paren-1.el)', () => {
     const filePath = path.join(fixturesDir, 'missing_paren-1.el');
     const lispCode = fs.readFileSync(filePath, 'utf8');
-    const expectedError = `Error: near line 11: Missing 1 closing parentheses.`;
+    const expectedError = `Error: near line 9: Missing 1 closing parentheses.`;
     expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
   });
 
   test('should return an error for missing closing parentheses (missing_paren-2.el)', () => {
     const filePath = path.join(fixturesDir, 'missing_paren-2.el');
     const lispCode = fs.readFileSync(filePath, 'utf8');
-    const expectedError = `Error: near line 12: Missing 1 closing parentheses.`;
+    const expectedError = `Error: near line 10: Missing 1 closing parentheses.`;
     expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
   });
 
@@ -61,7 +61,7 @@ describe('checkParenthesesLogic', () => {
   test('should return an error for real world sample (real_world_sample-1.el)', () => {
     const filePath = path.join(fixturesDir, 'real_world_sample-1.el');
     const lispCode = fs.readFileSync(filePath, 'utf8');
-    const expectedError = `Error: near line 14: Missing 2 closing parentheses.`;
+    const expectedError = `Error: near line 13: Missing 2 closing parentheses.`;
     expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
   });
 });

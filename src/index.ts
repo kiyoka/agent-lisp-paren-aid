@@ -136,21 +136,46 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
     if (diffLineNum > 0) {
         // Use DB1 (closeParenLines) to search upward from L1.
         let targetLine = 0;
-        for (let i = closeParenLines.length - 1; i >= 0; i--) {
-            const l = closeParenLines[i];
-            if (l <= diffLineNum) {
-                targetLine = l;
-                break;
+            // According to spec (A): start searching from the line **before** L1.
+            for (let i = closeParenLines.length - 1; i >= 0; i--) {
+                const l = closeParenLines[i];
+                if (l < diffLineNum) {
+                    targetLine = l;
+                    break;
+                }
             }
-        }
 
-        if (targetLine > 0) {
-            return `Error: near line ${targetLine}: Missing ${parenCounter} closing parentheses.`;
-        }
-        // If we couldn't find any closing paren above diffLineNum, fall back later.
+
+            if (targetLine > 0) {
+                // If this candidate is before the most recent unmatched opening '(',
+                // prefer the line of that unmatched opening instead. This heuristic
+                // better pin-points the location where the missing ')' should be
+                // inserted when multiple parentheses are missing on consecutive
+                // lines (e.g. small one-liner expressions).
+                const lastUnmatchedOpen = openStack.length > 0 ? openStack[openStack.length - 1] : 0;
+                const finalLine = targetLine < lastUnmatchedOpen ? lastUnmatchedOpen : targetLine;
+                return `Error: near line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+            }
+            // If we couldn't find any closing paren candidate, we'll fall back later.
     }
 
-    // Fallback: use the most recently opened unmatched opening parenthesis.
+    // If diffLineNum could not be determined (e.g., Emacs unavailable), approximate it
+    // with the most recent unmatched opening parenthesis line so that we can still
+    // leverage DB1 for locating the error.
+    if (diffLineNum === 0 && openStack.length > 0) {
+        diffLineNum = openStack[openStack.length - 1];
+        // Try DB1 search again with this approximated L1.
+        for (let i = closeParenLines.length - 1; i >= 0; i--) {
+            const l = closeParenLines[i];
+            if (l < diffLineNum) {
+                const lastUnmatchedOpen = openStack[openStack.length - 1];
+                const finalLine = l < lastUnmatchedOpen ? lastUnmatchedOpen : l;
+                return `Error: near line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+            }
+        }
+    }
+
+    // Final fallback: report using the latest unmatched opening parenthesis.
     if (openStack.length > 0) {
         const fallbackLine = openStack[openStack.length - 1];
         return `Error: near line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
