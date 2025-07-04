@@ -59,9 +59,10 @@ describe('checkParenthesesLogic', () => {
   });
 
   test('should return an error for extra closing parentheses (extra_paren-2.el)', () => {
-    const lispCode = loadFixture('extra_paren-2.el');
-    const expectedError = 'Error: line 13: There are extra 1 closing parentheses.';
-    expect(checkParenthesesLogic(lispCode)).toBe(expectedError);
+    const filePath = path.join(fixturesDir, 'extra_paren-2.el');
+    const lispCode = fs.readFileSync(filePath, 'utf8');
+    const expectedError = 'Error: line 8: There are extra 1 closing parentheses.';
+    expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
   });
 
   test('should return an error for real world sample (real_world_sample-1.el)', () => {
