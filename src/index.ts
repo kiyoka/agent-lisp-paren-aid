@@ -89,6 +89,7 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
   const openStack: number[] = [];
   // DB1: Record of every ')' token encountered along with its line number
   const closeParenLines: number[] = [];
+  let extraParenLine = 0; // Line where extra closing parenthesis was found
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -134,7 +135,10 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
             openStack.pop();
           } else {
             // Found an extra closing parenthesis
-            return `Error: line ${lineNum}: There are extra 1 closing parentheses.`;
+            parenCounter--; // Continue counting to check total imbalance
+            if (extraParenLine === 0) {
+              extraParenLine = lineNum; // Remember first occurrence
+            }
           }
           j++;
           break;
@@ -146,8 +150,10 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
 
   }
 
-  if (parenCounter > 0) {
+  // Check for parenthesis imbalance
+  if (parenCounter !== 0) {
     let diffLineNum = 0; // (L1)
+    let indentChange = ''; // 'deeper' or 'shallower'
 
     if (filePath) {
         const tempDir = os.tmpdir();
@@ -179,6 +185,16 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
                 // Detect any difference (including indentation).
                 if (originalLines[i] !== indentedLines[i]) {
                     diffLineNum = i + 1; // 1-based line number (L1)
+                    
+                    // Determine if indentation became deeper or shallower
+                    const origIndent = originalLines[i].length - originalLines[i].trimStart().length;
+                    const indentedIndent = indentedLines[i].length - indentedLines[i].trimStart().length;
+                    
+                    if (indentedIndent > origIndent) {
+                        indentChange = 'deeper'; // Missing parentheses
+                    } else if (indentedIndent < origIndent) {
+                        indentChange = 'shallower'; // Extra parentheses
+                    }
                     break;
                 }
             }
@@ -196,9 +212,44 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
         }
     }
 
+    // Handle based on indentation change
     if (diffLineNum > 0) {
-        // Use DB1 (closeParenLines) to search upward from L1.
-        let targetLine = 0;
+        if (parenCounter < 0) {
+            // Extra parentheses detected
+            // For extra parentheses, look for the line with actual extra closing parentheses
+            // Search backwards from diffLineNum to find a line with more ) than (
+            let targetLine = diffLineNum;
+            for (let i = diffLineNum - 1; i >= 1; i--) {
+                const line = lines[i - 1]; // 0-based index
+                let openCount = 0;
+                let closeCount = 0;
+                let inStr = false;
+                
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    
+                    // Skip comments
+                    if (!inStr && char === ';') break;
+                    
+                    if (char === '"' && (j === 0 || line[j-1] !== '\\')) {
+                        inStr = !inStr;
+                    } else if (!inStr) {
+                        if (char === '(') openCount++;
+                        else if (char === ')') closeCount++;
+                    }
+                }
+                
+                // If this line has more closing than opening parens, it's likely the error location
+                if (closeCount > openCount) {
+                    targetLine = i;
+                    break;
+                }
+            }
+            return `Error: line ${targetLine}: There are extra ${Math.abs(parenCounter)} closing parentheses.`;
+        } else {
+            // Missing parentheses - use existing logic
+            // Use DB1 (closeParenLines) to search upward from L1.
+            let targetLine = 0;
             // According to spec (A): start searching from the line **before** L1.
             for (let i = closeParenLines.length - 1; i >= 0; i--) {
                 const l = closeParenLines[i];
@@ -207,7 +258,6 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
                     break;
                 }
             }
-
 
             if (targetLine > 0) {
                 // If this candidate is before the most recent unmatched opening '(',
@@ -219,32 +269,39 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
                 const finalLine = targetLine < lastUnmatchedOpen ? lastUnmatchedOpen : targetLine;
                 return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
             }
-            // If we couldn't find any closing paren candidate, we'll fall back later.
-    }
-
-    // If diffLineNum could not be determined (e.g., Emacs unavailable), approximate it
-    // with the most recent unmatched opening parenthesis line so that we can still
-    // leverage DB1 for locating the error.
-    if (diffLineNum === 0 && openStack.length > 0) {
-        diffLineNum = openStack[openStack.length - 1];
-        // Try DB1 search again with this approximated L1.
-        for (let i = closeParenLines.length - 1; i >= 0; i--) {
-            const l = closeParenLines[i];
-            if (l < diffLineNum) {
-                const lastUnmatchedOpen = openStack[openStack.length - 1];
-                const finalLine = l < lastUnmatchedOpen ? lastUnmatchedOpen : l;
-                return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
-            }
         }
     }
 
-    // Final fallback: report using the latest unmatched opening parenthesis.
-    if (openStack.length > 0) {
-        const fallbackLine = openStack[openStack.length - 1];
-        return `Error: line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
-    }
+    // Fallback for when Emacs is unavailable or diff couldn't be determined
+    if (parenCounter < 0) {
+        // Extra parentheses - use the first occurrence line
+        if (extraParenLine > 0) {
+            return `Error: line ${extraParenLine}: There are extra ${Math.abs(parenCounter)} closing parentheses.`;
+        }
+        return `Error: There are extra ${Math.abs(parenCounter)} closing parentheses.`;
+    } else if (parenCounter > 0) {
+        // Missing parentheses - use existing fallback logic
+        if (diffLineNum === 0 && openStack.length > 0) {
+            diffLineNum = openStack[openStack.length - 1];
+            // Try DB1 search again with this approximated L1.
+            for (let i = closeParenLines.length - 1; i >= 0; i--) {
+                const l = closeParenLines[i];
+                if (l < diffLineNum) {
+                    const lastUnmatchedOpen = openStack[openStack.length - 1];
+                    const finalLine = l < lastUnmatchedOpen ? lastUnmatchedOpen : l;
+                    return `Error: line ${finalLine}: Missing ${parenCounter} closing parentheses.`;
+                }
+            }
+        }
 
-    return `Error: Missing ${parenCounter} closing parentheses.`;
+        // Final fallback: report using the latest unmatched opening parenthesis.
+        if (openStack.length > 0) {
+            const fallbackLine = openStack[openStack.length - 1];
+            return `Error: line ${fallbackLine}: Missing ${parenCounter} closing parentheses.`;
+        }
+
+        return `Error: Missing ${parenCounter} closing parentheses.`;
+    }
   }
 
   return 'ok';
