@@ -1,6 +1,6 @@
 {
   "name": "agent-lisp-paren-aid",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A tool to help coding agents manage parenthesis matching in generated Lisp code.",
   "main": "dist/index.js",
   "bin": {
