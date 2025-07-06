@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(rg:*)",
-      "Bash(./bin/agent-lisp-paren-aid-linux:*)"
+      "Bash(./bin/agent-lisp-paren-aid-linux:*)",
+      "Bash(gh issue view:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }
