@@ -10,7 +10,8 @@
       "Bash(node:*)",
       "Bash(mv:*)",
       "Bash(npm test:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }
