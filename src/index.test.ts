@@ -71,4 +71,11 @@ describe('checkParenthesesLogic', () => {
     const expectedError = `Error: line 13: Missing 2 closing parentheses.`;
     expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
   });
+
+  test('should return an error for mismatched parentheses with balanced count (issue-10.el)', () => {
+    const filePath = path.join(fixturesDir, 'issue-10.el');
+    const lispCode = fs.readFileSync(filePath, 'utf8');
+    const expectedError = `Error: line 4: Missing 1 closing parentheses.`;
+    expect(checkParenthesesLogic(lispCode, filePath)).toBe(expectedError);
+  });
 });

@@ -150,8 +150,9 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
 
   }
 
-  // Check for parenthesis imbalance
-  if (parenCounter !== 0) {
+  // Check for parenthesis imbalance or potential structural issues
+  // Even if parenCounter === 0, we still check with Emacs for structural mismatches
+  if (parenCounter !== 0 || filePath) {
     let diffLineNum = 0; // (L1)
     let indentChange = ''; // 'deeper' or 'shallower'
 
@@ -214,7 +215,31 @@ export function checkParenthesesLogic(data: string, filePath?: string): string {
 
     // Handle based on indentation change
     if (diffLineNum > 0) {
-        if (parenCounter < 0) {
+        // If parenCounter === 0 but indentation differs, we have a structural mismatch
+        if (parenCounter === 0) {
+            // For structural mismatches with balanced total count,
+            // we need to find the actual problematic line
+            
+            // Search backwards from diffLineNum to find the problematic line
+            let targetLine = diffLineNum;
+            
+            // Check for missing parentheses by looking at closeParenLines (DB1)
+            if (indentChange === 'deeper') {
+                // Indentation became deeper, indicating missing parentheses
+                // Search backwards in closeParenLines for the last ) before diffLineNum
+                for (let i = closeParenLines.length - 1; i >= 0; i--) {
+                    const l = closeParenLines[i];
+                    if (l < diffLineNum) {
+                        targetLine = l;
+                        break;
+                    }
+                }
+                return `Error: line ${targetLine}: Missing 1 closing parentheses.`;
+            } else if (indentChange === 'shallower') {
+                // Indentation became shallower, indicating extra parentheses
+                return `Error: line ${diffLineNum}: There are extra 1 closing parentheses.`;
+            }
+        } else if (parenCounter < 0) {
             // Extra parentheses detected
             // For extra parentheses, look for the line with actual extra closing parentheses
             // Search backwards from diffLineNum to find a line with more ) than (
