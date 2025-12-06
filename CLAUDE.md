@@ -1,7 +1,12 @@
 
-- 本プロジェクトはTypeScriptで実装します。
-- npmパッケージ agent-lisp-paren-aid としてビルドします。
+本プロジェクトはGo言語で実装されています。
 - プログラム本体は agent-lisp-paren-aid という名前で実行できるようにします。
 - ソースコードのコメントは英語で書きます。
-- bin/agent-lisp-paren-aid-denoはdenoでシングルバイナリとして作成します。
-- bin/agent-lisp-paren-aid-deno はバイナリファイルで大きいのでgitにはコミットしません。
+- クロスプラットフォーム対応のバイナリをビルドできます（Linux、macOS Intel、macOS Apple Silicon）。
+- バイナリファイルは.gitignoreに含まれているためgitにはコミットしません。
+
+claude codeのセッションは日本語でお願いします。
+
+了解です。一旦ソースコードを確認させてください。
+
+コミットして、コミットログも英語で書いてください。
