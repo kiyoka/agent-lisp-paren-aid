@@ -1,5 +1,0 @@
-{
-  "compilerOptions": {
-    // Empty config to avoid Node/tsc-specific options that Deno does not support.
-  }
-}

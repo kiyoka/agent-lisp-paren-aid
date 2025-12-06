@@ -15,3 +15,11 @@ HOW_TO_BUILD.ja.mdと、README.ja.mdを最新に更新してください。
 
 package.jsonは不要になったので削除してください。
 package-lock.json不要です。
+
+go言語になったので、他の不要なファイルがあります。以下のファイルを削除してください。
+jest.config.js
+src/index.test.ts
+src/index.ts
+tsconfig.deno.json
+tsconfig.json
+
