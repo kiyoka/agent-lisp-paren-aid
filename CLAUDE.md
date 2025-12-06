@@ -12,3 +12,5 @@ claude codeのセッションは日本語でお願いします。
 コミットして、コミットログも英語で書いてください。
 
 HOW_TO_BUILD.ja.mdと、README.ja.mdを最新に更新してください。
+
+package.jsonは不要になったので削除してください。
