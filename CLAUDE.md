@@ -14,3 +14,4 @@ claude codeのセッションは日本語でお願いします。
 HOW_TO_BUILD.ja.mdと、README.ja.mdを最新に更新してください。
 
 package.jsonは不要になったので削除してください。
+package-lock.json不要です。
