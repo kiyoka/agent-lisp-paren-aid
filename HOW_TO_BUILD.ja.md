@@ -29,12 +29,12 @@ cd agent-lisp-paren-aid
 make build
 ```
 
-これで `agent-lisp-paren-aid` という実行ファイルが生成されます。
+これで `bin/agent-lisp-paren-aid` という実行ファイルが生成されます。
 
 実行方法：
 
 ```bash
-./agent-lisp-paren-aid path/to/file.el
+./bin/agent-lisp-paren-aid path/to/file.el
 ```
 
 ### 3. 複数のプラットフォーム向けにクロスコンパイル
@@ -44,10 +44,10 @@ make build
 make build-all
 ```
 
-これで以下のバイナリが生成されます：
-- `agent-lisp-paren-aid-linux` (Linux amd64)
-- `agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
-- `agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
+これで `bin/` ディレクトリに以下のバイナリが生成されます：
+- `bin/agent-lisp-paren-aid-linux` (Linux amd64)
+- `bin/agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
+- `bin/agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
 
 または、特定のプラットフォーム向けに個別にビルド：
 
@@ -77,17 +77,20 @@ go test -v
 手動でビルドする場合：
 
 ```bash
+# bin ディレクトリを作成（存在しない場合）
+mkdir -p bin
+
 # 現在のプラットフォーム向け
-go build -o agent-lisp-paren-aid
+go build -o bin/agent-lisp-paren-aid
 
 # Linux 向け
-GOOS=linux GOARCH=amd64 go build -o agent-lisp-paren-aid-linux
+GOOS=linux GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-linux
 
 # macOS Intel 向け
-GOOS=darwin GOARCH=amd64 go build -o agent-lisp-paren-aid-darwin-amd64
+GOOS=darwin GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-darwin-amd64
 
 # macOS Apple Silicon 向け
-GOOS=darwin GOARCH=arm64 go build -o agent-lisp-paren-aid-darwin-arm64
+GOOS=darwin GOARCH=arm64 go build -o bin/agent-lisp-paren-aid-darwin-arm64
 ```
 
 ---

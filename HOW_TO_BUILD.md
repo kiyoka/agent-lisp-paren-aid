@@ -27,12 +27,12 @@ cd agent-lisp-paren-aid
 make build
 ```
 
-This creates the `agent-lisp-paren-aid` executable.
+This creates the `bin/agent-lisp-paren-aid` executable.
 
 Run it:
 
 ```bash
-./agent-lisp-paren-aid path/to/file.el
+./bin/agent-lisp-paren-aid path/to/file.el
 ```
 
 ### 3. Cross-compile for multiple platforms
@@ -42,10 +42,10 @@ Run it:
 make build-all
 ```
 
-This creates:
-- `agent-lisp-paren-aid-linux` (Linux amd64)
-- `agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
-- `agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
+This creates binaries in the `bin/` directory:
+- `bin/agent-lisp-paren-aid-linux` (Linux amd64)
+- `bin/agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
+- `bin/agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
 
 Or build for specific platforms:
 
@@ -75,17 +75,20 @@ go test -v
 If you prefer to build manually:
 
 ```bash
+# Create bin directory if it doesn't exist
+mkdir -p bin
+
 # Build for current platform
-go build -o agent-lisp-paren-aid
+go build -o bin/agent-lisp-paren-aid
 
 # Build for Linux
-GOOS=linux GOARCH=amd64 go build -o agent-lisp-paren-aid-linux
+GOOS=linux GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-linux
 
 # Build for macOS Intel
-GOOS=darwin GOARCH=amd64 go build -o agent-lisp-paren-aid-darwin-amd64
+GOOS=darwin GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-darwin-amd64
 
 # Build for macOS Apple Silicon
-GOOS=darwin GOARCH=arm64 go build -o agent-lisp-paren-aid-darwin-arm64
+GOOS=darwin GOARCH=arm64 go build -o bin/agent-lisp-paren-aid-darwin-arm64
 ```
 
 ---

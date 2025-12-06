@@ -23,3 +23,7 @@ src/index.ts
 tsconfig.deno.json
 tsconfig.json
 
+以下の4つのファイルはビルド後、binディレクトリに保存するようにしてください
+agent-lisp-paren-aid			agent-lisp-paren-aid-darwin-arm64
+agent-lisp-paren-aid-darwin-amd64	agent-lisp-paren-aid-linux
+

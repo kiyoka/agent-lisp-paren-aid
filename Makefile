@@ -2,19 +2,23 @@
 
 # Build for current platform
 build:
-	go build -o agent-lisp-paren-aid
+	mkdir -p bin
+	go build -o bin/agent-lisp-paren-aid
 
 # Build for Linux (amd64)
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -o agent-lisp-paren-aid-linux
+	mkdir -p bin
+	GOOS=linux GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-linux
 
 # Build for macOS (amd64)
 build-darwin-amd64:
-	GOOS=darwin GOARCH=amd64 go build -o agent-lisp-paren-aid-darwin-amd64
+	mkdir -p bin
+	GOOS=darwin GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-darwin-amd64
 
 # Build for macOS (arm64 / Apple Silicon)
 build-darwin-arm64:
-	GOOS=darwin GOARCH=arm64 go build -o agent-lisp-paren-aid-darwin-arm64
+	mkdir -p bin
+	GOOS=darwin GOARCH=arm64 go build -o bin/agent-lisp-paren-aid-darwin-arm64
 
 # Build for all platforms
 build-all: build-linux build-darwin-amd64 build-darwin-arm64
@@ -25,4 +29,4 @@ test:
 
 # Clean build artifacts
 clean:
-	rm -f agent-lisp-paren-aid agent-lisp-paren-aid-linux agent-lisp-paren-aid-darwin-amd64 agent-lisp-paren-aid-darwin-arm64
+	rm -f bin/agent-lisp-paren-aid bin/agent-lisp-paren-aid-linux bin/agent-lisp-paren-aid-darwin-amd64 bin/agent-lisp-paren-aid-darwin-arm64
