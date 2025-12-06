@@ -11,7 +11,17 @@
       "Bash(mv:*)",
       "Bash(npm test:*)",
       "Bash(cat:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(go test:*)",
+      "Bash(brew list:*)",
+      "Bash(brew install:*)",
+      "Bash(emacs --version:*)",
+      "Bash(make build:*)",
+      "Bash(./agent-lisp-paren-aid:*)",
+      "Bash(make build-all:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
