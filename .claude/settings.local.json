@@ -21,7 +21,12 @@
       "Bash(make build-all:*)",
       "Bash(ls:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(if [ -d src ])",
+      "Bash(then git rm -r src)",
+      "Bash(else echo \"srcディレクトリは既に削除されているか、ファイルが含まれています\")",
+      "Bash(fi)"
     ],
     "deny": []
   }
