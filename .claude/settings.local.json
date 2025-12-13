@@ -11,7 +11,23 @@
       "Bash(mv:*)",
       "Bash(npm test:*)",
       "Bash(cat:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(go test:*)",
+      "Bash(brew list:*)",
+      "Bash(brew install:*)",
+      "Bash(emacs --version:*)",
+      "Bash(make build:*)",
+      "Bash(./agent-lisp-paren-aid:*)",
+      "Bash(make build-all:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(if [ -d src ])",
+      "Bash(then git rm -r src)",
+      "Bash(else echo \"srcディレクトリは既に削除されているか、ファイルが含まれています\")",
+      "Bash(fi)",
+      "Bash(bin/agent-lisp-paren-aid-darwin-arm64:*)"
     ],
     "deny": []
   }

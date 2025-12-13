@@ -1,7 +1,12 @@
 node_modules
 dist
-bin/agent-lisp-paren-aid-deno
 memo.txt
 .\#memo.txt
 \#memo.txt\#
+
+# Go binaries (in bin directory)
+bin/agent-lisp-paren-aid
 bin/agent-lisp-paren-aid-linux
+bin/agent-lisp-paren-aid-darwin-amd64
+bin/agent-lisp-paren-aid-darwin-arm64
+bin/agent-lisp-paren-aid-deno

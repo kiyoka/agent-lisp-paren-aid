@@ -16,15 +16,22 @@ LLMが生成するLispコードは、インデントは正しいにもかかわ�
 
 ## インストール方法
 
-denoで生成したシングルバイナリをGitHubのリリースリンクからダウンロードしてパスの通ったところに置いてください。
+お使いのOSに対応したクロスプラットフォームバイナリをGitHubのリリースページからダウンロードして、パスの通ったところに置いてください。
+
+利用可能なバイナリ：
+- `agent-lisp-paren-aid-linux` (Linux x86_64)
+- `agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
+- `agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
+
+使いやすくするために、バイナリを `agent-lisp-paren-aid` にリネームすることをお勧めします。
 
 ## 使い方
 ```bash
 # 基本
-$ agent-lisp-paren-aid-linux <file.el>
+$ agent-lisp-paren-aid <file.el>
 
 # バージョン表示
-$ agent-lisp-paren-aid-linux --version
+$ agent-lisp-paren-aid --version
 ```
 
 ### 出力例
@@ -43,26 +50,28 @@ $ agent-lisp-paren-aid-linux --version
 
 ```
 ## 編集プロセス
-- <あなたのLispプログラム名> を編集した後は、必ず agent-lisp-paren-aid-linux を実行して、閉じ括弧が合っているか確認してください。
+- <あなたのLispプログラム名> を編集した後は、必ず agent-lisp-paren-aid を実行して、閉じ括弧が合っているか確認してください。
 
 もし括弧が整合していない場合は、修正すべき行番号を教えてくれます。
 
-agent-lisp-paren-aid-linux <あなたのLispプログラム名>
+agent-lisp-paren-aid <あなたのLispプログラム名>
 
 もし不整合が検出されたら他の編集作業はせず、一旦指摘された行番号に括弧を補う修正のみを行って、
-再度 agent-lisp-paren-aid-linux を実行するようにしてください。
+再度 agent-lisp-paren-aid を実行するようにしてください。
 LLMはLisp括弧を数えるのが苦手なため、自分で数えたり考えたりせず、必ずこのツールを使うようにしてください。
 ```
 
 ## 前提ソフトウェア
 
-* **Node.js v18+** もしくは **Deno v1.44+**  (シングルバイナリ実行するだけであれば、不要)
 * **Emacs**（括弧不足時のインデント解析に使用）
+* **Go 1.21+**（ソースからビルドする場合のみ必要。バイナリ実行には不要）
 
 ## 開発
 
 ```bash
-$ npm test   # Jest + ts-jest でユニットテスト実行
+$ make test   # Go のユニットテストを実行
+# または
+$ go test -v
 ```
 
 ビルド方法は [HOW_TO_BUILD.md](HOW_TO_BUILD.md) を参照

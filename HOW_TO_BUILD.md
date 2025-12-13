@@ -1,14 +1,14 @@
-# HOW TO BUILD (Deno single-binary version)  
+# HOW TO BUILD (Go version)
 *日本語版は [HOW_TO_BUILD.ja.md](HOW_TO_BUILD.ja.md) をご覧ください。*
 
-This project is written in TypeScript, but you can turn it into a **single stand-alone executable** by using Deno’s `deno compile` command. That makes distribution simple—no runtime dependencies are required except the binary itself.
+This project is written in **Go**, which makes it easy to create **cross-platform single-binary executables** that work on both Linux and macOS without any runtime dependencies.
 
 ---
 
 ## Prerequisites
 
-1. **Deno v1.44 or later** must be installed. Install instructions: <https://deno.com/runtime>
-2. (Optional) On Linux/macOS you’ll need permission to mark the file as executable with `chmod +x`.
+1. **Go 1.21 or later** must be installed. Install instructions: <https://go.dev/doc/install>
+2. **Emacs** is required for the tool to work (used for indentation analysis)
 
 ---
 
@@ -21,18 +21,13 @@ git clone https://github.com/kiyoka/agent-lisp-paren-aid.git
 cd agent-lisp-paren-aid
 ```
 
-### 2. Build a binary for your current OS / CPU
+### 2. Build a binary for your current platform
 
 ```bash
-deno compile \
-  --config tsconfig.deno.json \     # ignore Node-specific tsconfig options
-  --allow-read \                    # the tool reads source files
-  --allow-write \                   # writes to /tmp when using Emacs
-  --allow-env \                     # reads TMPDIR environment variable
-  --allow-run \                     # executes external commands (Emacs)
-  --output bin/agent-lisp-paren-aid \  # output file name
-  src/index.ts
+make build
 ```
+
+This creates the `bin/agent-lisp-paren-aid` executable.
 
 Run it:
 
@@ -40,48 +35,75 @@ Run it:
 ./bin/agent-lisp-paren-aid path/to/file.el
 ```
 
-### 3. Cross-compile (optional)
+### 3. Cross-compile for multiple platforms
 
 ```bash
-# Windows (x86_64)
-deno compile \
-  --config tsconfig.deno.json \
-  --allow-read --allow-write --allow-env --allow-run \
-  --target x86_64-pc-windows-msvc \
-  --output bin/agent-lisp-paren-aid-win.exe \
-  src/index.ts
-
-# macOS (Apple Silicon)
-deno compile \
-  --config tsconfig.deno.json \
-  --allow-read --allow-write --allow-env --allow-run \
-  --target aarch64-apple-darwin \
-  --output bin/agent-lisp-paren-aid-macos-arm64 \
-  src/index.ts
+# Build for all platforms (Linux, macOS Intel, macOS Apple Silicon)
+make build-all
 ```
 
-See `deno compile --help` for the full target list.
+This creates binaries in the `bin/` directory:
+- `bin/agent-lisp-paren-aid-linux` (Linux amd64)
+- `bin/agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
+- `bin/agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
+
+Or build for specific platforms:
+
+```bash
+# Build for Linux only
+make build-linux
+
+# Build for macOS Intel only
+make build-darwin-amd64
+
+# Build for macOS Apple Silicon only
+make build-darwin-arm64
+```
+
+### 4. Run tests
+
+```bash
+make test
+# or
+go test -v
+```
 
 ---
 
-## npm shortcut
+## Manual build (without Makefile)
+
+If you prefer to build manually:
 
 ```bash
-npm run deno-build
-```
+# Create bin directory if it doesn't exist
+mkdir -p bin
 
-This creates `bin/agent-lisp-paren-aid-linux` by default (the name may differ if you edited the script).
+# Build for current platform
+go build -o bin/agent-lisp-paren-aid
+
+# Build for Linux
+GOOS=linux GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-linux
+
+# Build for macOS Intel
+GOOS=darwin GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-darwin-amd64
+
+# Build for macOS Apple Silicon
+GOOS=darwin GOARCH=arm64 go build -o bin/agent-lisp-paren-aid-darwin-arm64
+```
 
 ---
 
 ## FAQ
 
-**Q. Executable says “Permission denied”**  
-Add execute permission: `chmod +x bin/agent-lisp-paren-aid`.
+**Q. Executable says "Permission denied"**
+Add execute permission: `chmod +x agent-lisp-paren-aid`.
 
-**Q. `PermissionNotGranted` error during compile**  
-Pass both `--allow-read` and `--allow-write` to `deno compile`.
+**Q. Tests fail with "emacs: command not found"**
+Install Emacs. On macOS: `brew install emacs`. On Linux: `apt-get install emacs` or `yum install emacs`.
+
+**Q. How big are the binaries?**
+Around 2.5-2.6 MB for each platform. Much smaller than Deno binaries!
 
 ---
 
-That’s it—your Deno single-binary build is ready. Happy hacking!
+That's it—your Go cross-platform build is ready. Happy hacking!

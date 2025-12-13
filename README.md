@@ -16,16 +16,23 @@ LLM-generated Lisp code often has correct indentation despite having **missing o
 
 ## Installation
 
-Download the single binary generated with deno from the GitHub release link and place it in a directory in your PATH.
+Download the cross-platform binary for your OS from the GitHub release page and place it in a directory in your PATH.
+
+Available binaries:
+- `agent-lisp-paren-aid-linux` (Linux x86_64)
+- `agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
+- `agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
+
+Rename the binary to `agent-lisp-paren-aid` for easier use.
 
 ## Usage
 
 ```bash
 # Basic usage
-$ agent-lisp-paren-aid-linux <file.el>
+$ agent-lisp-paren-aid <file.el>
 
 # Display version
-$ agent-lisp-paren-aid-linux --version
+$ agent-lisp-paren-aid --version
 ```
 
 ### Output Examples
@@ -44,26 +51,28 @@ Adding the following text to AGENTS.md/GEMINI.md/CLAUDE.md will encourage agents
 
 ```
 ## Editing Process
-- After editing <your Lisp program name>, always run agent-lisp-paren-aid-linux to check if the closing parentheses match correctly.
+- After editing <your Lisp program name>, always run agent-lisp-paren-aid to check if the closing parentheses match correctly.
 
 If parentheses are mismatched, it will tell you which line number needs to be fixed.
 
-agent-lisp-paren-aid-linux <your Lisp program name>
+agent-lisp-paren-aid <your Lisp program name>
 
 If a mismatch is detected, do not perform any other editing tasks. Instead, first make corrections only to add parentheses at the line number indicated,
-then run agent-lisp-paren-aid-linux again.
+then run agent-lisp-paren-aid again.
 Since LLMs are not good at counting Lisp parentheses, always use this tool instead of counting or thinking about it yourself.
 ```
 
 ## Prerequisites
 
-* **Node.js v18+** or **Deno v1.44+** (Not required if only executing the single binary)
 * **Emacs** (Used for indentation analysis when parentheses are missing)
+* **Go 1.21+** (Only required for building from source, not needed for running the binary)
 
 ## Development
 
 ```bash
-$ npm test   # Run unit tests with Jest + ts-jest
+$ make test   # Run unit tests with Go
+# or
+$ go test -v
 ```
 
 For build instructions, see [HOW_TO_BUILD.md](HOW_TO_BUILD.md)

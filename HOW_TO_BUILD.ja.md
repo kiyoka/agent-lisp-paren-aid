@@ -1,16 +1,16 @@
-# HOW_TO_BUILD (Deno 版シングルバイナリ)  
-*English version is available in [HOW_TO_BUILD.md](HOW_TO_BUILD.md).* 
+# HOW_TO_BUILD (Go 版)
+*English version is available in [HOW_TO_BUILD.md](HOW_TO_BUILD.md).*
 
-本ツールは TypeScript 製ですが、Deno の `deno compile` コマンドを使うことで **単一実行ファイル** に変換して配布できます。以下に手順を示します。
+本プロジェクトは **Go言語** で実装されており、Linux と macOS の両方で動作する **クロスプラットフォーム対応の単一バイナリ** を簡単に作成できます。ランタイム依存がないため、配布が非常に簡単です。
 
 ---
 
 ## 前提条件
 
-1. **Deno v1.44 以降** がインストールされていること  
-   インストール方法は公式サイトを参照してください → <https://deno.com/runtime>
+1. **Go 1.21 以降** がインストールされていること
+   インストール方法は公式サイトを参照してください → <https://go.dev/doc/install>
 
-2. (任意) Linux/macOS では `chmod +x` で実行属性を付与できる権限
+2. **Emacs** がインストールされていること（ツールの動作に必要。インデント解析に使用）
 
 ---
 
@@ -19,66 +19,79 @@
 ### 1. リポジトリを取得
 
 ```bash
-$ git clone https://github.com/kiyoka/agent-lisp-paren-aid.git
-$ cd agent-lisp-paren-aid
+git clone https://github.com/kiyoka/agent-lisp-paren-aid.git
+cd agent-lisp-paren-aid
 ```
 
-### 2. シングルバイナリを生成
-
-最も簡単なのはデフォルトターゲット（現在の OS / CPU）向けにバイナリを作る方法です。
+### 2. 現在のプラットフォーム用のバイナリをビルド
 
 ```bash
-$ deno compile \
-    --config tsconfig.deno.json \
-    --allow-read \   # ファイルを読み取るための権限
-    --allow-write \  # /tmp/ やコピー先にファイルを出力するための権限
-    --allow-env \    # TMPDIR など環境変数へのアクセス権限
-    --allow-run \    # 外部コマンド(Emacs) を実行する権限
-    --output bin/agent-lisp-paren-aid \  # 生成物の出力先
-    src/index.ts
+make build
 ```
 
-生成後は `bin/agent-lisp-paren-aid` が出来上がり、そのまま実行できます。
+これで `bin/agent-lisp-paren-aid` という実行ファイルが生成されます。
+
+実行方法：
 
 ```bash
-$ ./bin/agent-lisp-paren-aid path/to/file.el
+./bin/agent-lisp-paren-aid path/to/file.el
 ```
 
-### 3. クロスコンパイル (オプション)
-
-`--target` フラグを付与すると別プラットフォーム向けのバイナリが作れます。
+### 3. 複数のプラットフォーム向けにクロスコンパイル
 
 ```bash
-# 例: Windows (x86_64)
-deno compile \
-  --config tsconfig.deno.json \
-  --allow-read --allow-write --allow-env --allow-run \
-  --target x86_64-pc-windows-msvc \
-  --output bin/agent-lisp-paren-aid-win.exe \
-  src/index.ts
-
-# 例: macOS (Apple Silicon)
-deno compile \
-  --config tsconfig.deno.json \
-  --allow-read --allow-write --allow-env --allow-run \
-  --target aarch64-apple-darwin \
-  --output bin/agent-lisp-paren-aid-macos-arm64 \
-  src/index.ts
+# すべてのプラットフォーム向けにビルド (Linux, macOS Intel, macOS Apple Silicon)
+make build-all
 ```
 
-利用可能なターゲット一覧は `deno compile --help` で確認してください。
+これで `bin/` ディレクトリに以下のバイナリが生成されます：
+- `bin/agent-lisp-paren-aid-linux` (Linux amd64)
+- `bin/agent-lisp-paren-aid-darwin-amd64` (macOS Intel)
+- `bin/agent-lisp-paren-aid-darwin-arm64` (macOS Apple Silicon)
+
+または、特定のプラットフォーム向けに個別にビルド：
+
+```bash
+# Linux 向けのみ
+make build-linux
+
+# macOS Intel 向けのみ
+make build-darwin-amd64
+
+# macOS Apple Silicon 向けのみ
+make build-darwin-arm64
+```
+
+### 4. テストの実行
+
+```bash
+make test
+# または
+go test -v
+```
 
 ---
 
-## ビルドスクリプトのショートカット
+## 手動ビルド (Makefile を使わない場合)
 
-`package.json` には同等のコマンドを実行する npm script が用意されています。
+手動でビルドする場合：
 
 ```bash
-$ npm run deno-build
-```
+# bin ディレクトリを作成（存在しない場合）
+mkdir -p bin
 
-このスクリプトは `bin/agent-lisp-paren-aid-linux` という名前でバイナリを生成します。
+# 現在のプラットフォーム向け
+go build -o bin/agent-lisp-paren-aid
+
+# Linux 向け
+GOOS=linux GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-linux
+
+# macOS Intel 向け
+GOOS=darwin GOARCH=amd64 go build -o bin/agent-lisp-paren-aid-darwin-amd64
+
+# macOS Apple Silicon 向け
+GOOS=darwin GOARCH=arm64 go build -o bin/agent-lisp-paren-aid-darwin-arm64
+```
 
 ---
 
@@ -86,12 +99,16 @@ $ npm run deno-build
 
 ### Q. バイナリ実行時に「Permission denied」が出る
 
-生成されたファイルに実行フラグが立っていない場合があります。`chmod +x bin/agent-lisp-paren-aid` で付与してください。
+実行権限を付与してください：`chmod +x agent-lisp-paren-aid`
 
-### Q. `deno compile` 時に「PermissionNotGranted」エラーが出る
+### Q. テスト実行時に「emacs: command not found」エラーが出る
 
-`--allow-read`, `--allow-write` の権限が不足している可能性があります。必要に応じて追加してください。
+Emacs をインストールしてください。macOS の場合：`brew install emacs`、Linux の場合：`apt-get install emacs` または `yum install emacs`
+
+### Q. バイナリのサイズはどのくらいですか？
+
+各プラットフォーム向けのバイナリは約 2.5〜2.6 MB です。Deno のバイナリよりもずっと小さいです！
 
 ---
 
-これで Deno 版シングルバイナリの作成は完了です。お疲れさまでした！
+これで Go 版クロスプラットフォームビルドの作成は完了です。お疲れさまでした！
