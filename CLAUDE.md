@@ -27,3 +27,15 @@ tsconfig.json
 agent-lisp-paren-aid			agent-lisp-paren-aid-darwin-arm64
 agent-lisp-paren-aid-darwin-amd64	agent-lisp-paren-aid-linux
 
+mainに変更し忘れていました
+タグ2.0.0を打ってください。
+
+マージは既に完了しています。fix-issue-12の内容はmainには反映されています。
+
+Commit Claude’s configuration.
+
+
+バイナリをビルドしてください
+
+間違って、.#CLAUDE.mdをコミットしてしまいました。
+gitignoreに登録してください

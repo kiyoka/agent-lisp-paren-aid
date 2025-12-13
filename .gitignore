@@ -1,8 +1,11 @@
 node_modules
 dist
 memo.txt
-.\#memo.txt
-\#memo.txt\#
+
+# Emacs temporary files
+.#*
+\#*\#
+*~
 
 # Go binaries (in bin directory)
 bin/agent-lisp-paren-aid
