@@ -27,7 +27,9 @@
       "Bash(then git rm -r src)",
       "Bash(else echo \"srcディレクトリは既に削除されているか、ファイルが含まれています\")",
       "Bash(fi)",
-      "Bash(bin/agent-lisp-paren-aid-darwin-arm64:*)"
+      "Bash(bin/agent-lisp-paren-aid-darwin-arm64:*)",
+      "Bash(git tag:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
