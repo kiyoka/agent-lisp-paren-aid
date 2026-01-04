@@ -151,3 +151,14 @@ func TestIssue10(t *testing.T) {
 		t.Errorf("Expected '%s', got '%s'", expected, result)
 	}
 }
+
+func TestCharLiteralBalanced(t *testing.T) {
+	lispCode, err := loadFixture("char-literal-balanced.el")
+	if err != nil {
+		t.Fatalf("Failed to load fixture: %v", err)
+	}
+	result := CheckParentheses(lispCode, "")
+	if result != "ok" {
+		t.Errorf("Expected 'ok', got '%s'", result)
+	}
+}
