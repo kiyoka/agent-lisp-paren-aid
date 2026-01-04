@@ -48,6 +48,20 @@ func CheckParentheses(data string, filePath string) string {
 				break // Ignore the rest of the line
 			}
 
+			// Handle character literals (e.g., ?a, ?\n, ?\))
+			if char == '?' && j+1 < len(line) {
+				j++ // Skip the '?'
+				nextChar := line[j]
+				if nextChar == '\\' && j+1 < len(line) {
+					// Escaped character literal (e.g., ?\n, ?\))
+					j += 2 // Skip '\' and the following character
+				} else {
+					// Simple character literal (e.g., ?a)
+					j++ // Skip the character
+				}
+				continue
+			}
+
 			switch char {
 			case '"':
 				inString = true
